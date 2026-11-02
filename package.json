@@ -1,0 +1,36 @@
+{
+  "name": "aquila-ai",
+  "version": "0.1.0",
+  "description": "AI-assisted development method for NestJS: plan → tests → implement → review, quality gates, docs and adapters for Claude Code, GitHub Copilot and Codex.",
+  "keywords": ["nestjs", "ai", "claude-code", "copilot", "codex", "agents", "tdd", "cli"],
+  "license": "MIT",
+  "author": "Aquila Zimbrao",
+  "repository": { "type": "git", "url": "git+https://github.com/arielzimbrao-dev/aquila-ai.git" },
+  "homepage": "https://github.com/arielzimbrao-dev/aquila-ai#readme",
+  "bugs": "https://github.com/arielzimbrao-dev/aquila-ai/issues",
+  "type": "module",
+  "bin": { "aquila-ai": "bin/aquila.mjs" },
+  "files": [
+    "bin/",
+    "core/",
+    "agents/",
+    "adapters/",
+    "skills/",
+    "hooks/",
+    "githooks/",
+    "lint/",
+    "schema/",
+    "stacks/",
+    "templates/",
+    ".claude-plugin/",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "assets/"
+  ],
+  "engines": { "node": ">=22" },
+  "peerDependencies": { "@nestjs/core": ">=8" },
+  "peerDependenciesMeta": { "@nestjs/core": { "optional": true } },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}
