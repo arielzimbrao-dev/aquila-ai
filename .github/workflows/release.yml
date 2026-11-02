@@ -28,4 +28,9 @@ jobs:
           pkg=$(node -p "require('./package.json').version")
           plugin=$(node -p "require('./.claude-plugin/plugin.json').version")
           test "v$pkg" = "$GITHUB_REF_NAME" && test "$pkg" = "$plugin" || { echo "version mismatch: $pkg / $plugin / $GITHUB_REF_NAME"; exit 1; }
-      - run: npm publish --access public
+      # Re-running a tag for a version already on npm (e.g. published by hand) is a no-op, not a failure.
+      - name: publish (skipped if this version is already on npm)
+        run: |
+          pkg=$(node -p "require('./package.json').version")
+          if npm view "aquila-ai@$pkg" version >/dev/null 2>&1; then echo "aquila-ai@$pkg already published — skipping"; exit 0; fi
+          npm publish --access public
