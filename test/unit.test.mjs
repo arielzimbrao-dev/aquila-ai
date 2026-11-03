@@ -32,20 +32,16 @@ test('guard: blocks git skipping hooks or force push, but not text that mentions
   }
 });
 
-test('git hooks delegate to the installed package and are versioned as executables', (t) => {
-  // The shipped hooks must pass the same direct-delegation check that check --ready applies.
+test('git hooks are the shared, package-agnostic dispatcher and are versioned as executables', (t) => {
+  // The shipped hooks pass the check --ready verification and are one script for both phases.
   const cfg = { hooks: { 'pre-commit': ['x'], 'pre-push': ['x'] } };
   assert.deepEqual(hookIssues(PKG, cfg, 'githooks'), []);
-  for (const phase of ['pre-commit', 'pre-push']) {
-    const text = readFileSync(join(PKG, 'githooks', phase), 'utf8');
-    assert.ok(!text.includes('\r\n'), `${phase}: sh breaks with CRLF`);
-    assert.match(
-      text,
-      new RegExp(
-        `exec node "\\$\\(git rev-parse --show-toplevel\\)/node_modules/aquila-ai/bin/aquila\\.mjs" gate ${phase}`,
-      ),
-    );
-  }
+  const commit = readFileSync(join(PKG, 'githooks', 'pre-commit'), 'utf8');
+  assert.equal(readFileSync(join(PKG, 'githooks', 'pre-push'), 'utf8'), commit, 'phase comes from $0');
+  assert.ok(!commit.includes('\r\n'), 'sh breaks with CRLF');
+  assert.match(commit, /^#!\/bin\/sh\n# aquila-hooks dispatcher v1 /);
+  assert.match(commit, /node_modules\/\$pkg\/bin\/aquila\.mjs/, 'runs whichever aquila package is registered');
+  assert.doesNotMatch(commit, /aquila-ai\/bin/, 'no package name hard-coded');
   // Linux/macOS ignore hooks without +x; only verifiable when the package is a git checkout.
   let modes;
   try {
@@ -84,6 +80,7 @@ test('guard: also catches -n, -c core.hooksPath and + refspec', async () => {
     `${g} commit -am 'fix -n flag'`,
     `${g} log --format=push -f x`,
     `${g} config core.hooksPath .aquila/githooks`,
+    `${g} config core.hooksPath .aquila-hooks`,
     `${g} config --get core.hooksPath`,
     `${g} config core.hooksPath .husky/_`,
     `${g} config core.hooksPath .husky`,

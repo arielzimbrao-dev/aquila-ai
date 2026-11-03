@@ -18,6 +18,7 @@ source of truth and use this map before changing code.
 | Adoption, modes and tools | presets, CLI and existing adapters | `test/scenarios.test.mjs` |
 | Regressions DA-001 to DA-006 (gates, CI/hooks, pnpm and invalid config preservation) | `bin/stack.mjs`, `bin/checks.mjs`, `bin/aquila.mjs` | `test/audit-regressions.test.mjs` |
 | `init`, hooks and doctor | `bin/aquila.mjs` (`init`, `doctor`), `githooks/` and `skills/aquila-init/SKILL.md` | `test/init-sync.test.mjs`, `test/check-gate.test.mjs` |
+| Monorepo, shared hook dispatcher (protocol shared with aquila-react-ai/aquila-next-ai: keep `bin/repo.mjs` and `githooks/` byte-identical) | `bin/repo.mjs`, `githooks/` | `test/monorepo.test.mjs` |
 | Gate execution and filtering | `bin/aquila.mjs` (`gate`, generated `.github/workflows/aquila-gates.yml`) | `test/check-gate.test.mjs` |
 | Rules for a task or checklist | `core/` | contract test if there is CLI behavior |
 

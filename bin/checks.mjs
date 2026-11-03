@@ -2,6 +2,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { globToRegex } from './glob.mjs';
 import { missingTool } from './lint.mjs';
+import { isDispatcher } from './repo.mjs';
 
 const DOC_DIRS = ['ai', 'c4', 'adr', 'tracks', 'reference', 'runbooks'];
 export const TEMPLATE_MARKS = {
@@ -109,7 +110,10 @@ export function hookIssues(root, cfg, hooksPath) {
       issues.push(`${dir}/${phase} missing → call gate ${phase} from your hook manager`);
       continue;
     }
-    const lines = readFileSync(file, 'utf8').split(/\r?\n/);
+    const raw = readFileSync(file, 'utf8');
+    // The shared dispatcher runs the gate of every registered project (registry checked by `check`).
+    if (isDispatcher(raw)) continue;
+    const lines = raw.split(/\r?\n/);
     const shell =
       !lines[0].startsWith('#!') ||
       /^#!(?:\/bin\/(?:ba)?sh|\/usr\/bin\/env (?:ba)?sh)\s*$/.test(lines[0]);
@@ -123,7 +127,11 @@ export function hookIssues(root, cfg, hooksPath) {
     const call = new RegExp(
       `^(?:exec[ \\t]+)?(?:node[ \\t]+${script}|npx(?:[ \\t]+--no(?:-install)?)?[ \\t]+aquila-ai)[ \\t]+gate[ \\t]+${phase}$`,
     );
-    if (!shell || !call.test(text))
+    // husky & co. delegating to the dispatcher: `.aquila-hooks/<phase> "$@"` (optionally via exec/sh).
+    const dispatch = new RegExp(
+      `^(?:exec[ \\t]+)?(?:sh[ \\t]+)?(?:\\./)?\\.aquila-hooks/${phase}(?:[ \\t]+"\\$@")?$`,
+    );
+    if (!shell || !(call.test(text) || dispatch.test(text)))
       issues.push(
         `${dir}/${phase} does not call \`npx aquila-ai gate ${phase}\` in a directly verifiable way — integration unverified (review complex hooks manually)`,
       );

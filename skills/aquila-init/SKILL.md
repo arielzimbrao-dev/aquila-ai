@@ -59,20 +59,24 @@ npx aquila-ai init --lang=<language> --tools=<list> --token-limit=<limit|none> -
 ```
 
 Use the confirmed answers. The CLI creates missing configuration, copies templates without overwriting,
-generates adapters/settings, sets `core.hooksPath` and generates the CI workflow. Then interpret every
+generates adapters/settings, sets `core.hooksPath` to the shared `.aquila-hooks/` dispatcher at the repository
+root and generates the CI workflow (in a monorepo subfolder: at the repository root, one per project). Then interpret every
 `!` and `✗`:
 
 1. **Gates and runtimes:** compare detection with the real `package.json` scripts, monorepos and tools
    already in use. Fill `gates`, `hooks` and `ci` without inventing commands. Without suitable checks,
    the setup stays incomplete.
-2. **CI:** `.github/workflows/aquila-gates.yml` is self-contained (checkout, setup-node, install,
+2. **CI:** `.github/workflows/aquila-gates.yml` (from a subfolder: `aquila-gates-<folder>.yml` at the repository
+   root, with `working-directory` and `paths`) is self-contained (checkout, setup-node, install,
    `npx aquila-ai check`, `npx aquila-ai gate ci`) and derives from `aquila.json → ci`. Keep existing
    jobs, branches, permissions and deploy; avoid duplicate checks and do not overwrite a manually edited
    workflow. Confirm the integration with the dev on conflict. Do not declare remote CI green just
    because the file exists.
-3. **Hooks:** if Husky or another manager exists, add `npx aquila-ai gate pre-commit` and
-   `npx aquila-ai gate pre-push` to the right hooks, preserving existing calls without duplicating them.
-   Do not replace the manager.
+3. **Hooks:** the repository has one `core.hooksPath`: the `.aquila-hooks/` dispatcher, shared with
+   aquila-react-ai/aquila-next-ai projects in the same repository (registry `.aquila-hooks/projects`;
+   commit both). If Husky or another manager exists, call `.aquila-hooks/pre-commit` and
+   `.aquila-hooks/pre-push "$@"` from it (repository root), preserving existing calls without
+   duplicating them. Do not replace the manager.
 4. **Agents:** check routers, existing specific rules and settings for each chosen tool.
    In `local`, committed routers are not replaced: resolve the warning with the dev (e.g. choose
    `team`); do not ignore the missing method. Never remove files from the Git index automatically.

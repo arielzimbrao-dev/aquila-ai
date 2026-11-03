@@ -100,7 +100,7 @@ test('init detects the stack, creates docs/ai, adapters, exclude and hooks', () 
     assert.doesNotMatch(exclude, /\.agents/);
     assert.equal(
       execFileSync('git', ['config', 'core.hooksPath'], { cwd: root, encoding: 'utf8' }).trim(),
-      '.aquila/githooks',
+      '.aquila-hooks',
     );
     assert.equal(
       execFileSync('git', ['status', '--porcelain', '--', 'AGENTS.md', '.agents'], {
@@ -527,12 +527,12 @@ test('.aquila/: sync copies the method, check flags edits and strays, sync resto
       'core/workflow.md',
       'skills/aquila-plan/SKILL.md',
       'schema/aquila.schema.json',
-      'githooks/pre-push',
       'lint/rules.json',
       'README.md',
     ])
       assert.ok(existsSync(join(root, '.aquila', f)), f);
     assert.equal(readIn(root, '.aquila/core/workflow.md'), readFileSync(join(PKG, 'core/workflow.md'), 'utf8'));
+    assert.ok(!existsSync(join(root, '.aquila', 'githooks')), 'hooks live in the shared .aquila-hooks dispatcher');
     assert.doesNotMatch(readIn(root, '.git/info/exclude'), /\.aquila/, '.aquila is versioned');
     assert.equal(aquila(root, 'check').code, 0);
 
@@ -553,13 +553,15 @@ test('.aquila/: sync copies the method, check flags edits and strays, sync resto
   }
 });
 
-test('init migrates core.hooksPath from node_modules/aquila-ai/githooks to .aquila/githooks', () => {
-  const root = project();
-  try {
-    git(root, 'config', 'core.hooksPath', 'node_modules/aquila-ai/githooks');
-    assert.equal(aquila(root, 'init').code, 0);
-    assert.equal(git(root, 'config', '--get', 'core.hooksPath'), '.aquila/githooks');
-  } finally {
-    cleanup(root);
+test('init migrates pre-0.2.0 core.hooksPath values to the shared .aquila-hooks dispatcher', () => {
+  for (const legacy of ['node_modules/aquila-ai/githooks', '.aquila/githooks']) {
+    const root = project();
+    try {
+      git(root, 'config', 'core.hooksPath', legacy);
+      assert.equal(aquila(root, 'init').code, 0);
+      assert.equal(git(root, 'config', '--get', 'core.hooksPath'), '.aquila-hooks', legacy);
+    } finally {
+      cleanup(root);
+    }
   }
 });

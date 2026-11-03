@@ -151,12 +151,13 @@ test('DA-005: non-executing hooks are not proven by command text', () => {
       '#!/bin/sh\nexec node "./node_modules/aquila-ai/bin/aquila.mjs" gate pre-push\n',
       '#!/bin/sh\nexec node "$(git rev-parse --show-toplevel)/node_modules/aquila-ai/bin/aquila.mjs" gate pre-push\n',
       'npx --no-install aquila-ai gate pre-push\n',
+      '#!/bin/sh\n.aquila-hooks/pre-push "$@"\n',
     ]) {
       writeFileSync(join(root, '.husky/pre-push'), script);
       assert.deepEqual(hookIssues(root, cfg, '.husky/_'), [], script);
     }
     prepare(root);
-    assert.deepEqual(hookIssues(root, cfg, '.aquila/githooks'), [], 'the copied hooks pass');
+    assert.deepEqual(hookIssues(root, cfg, '.aquila-hooks'), [], 'the shared dispatcher passes');
     execFileSync('git', ['config', 'core.hooksPath', '.husky/_'], { cwd: root });
     writeFileSync(join(root, '.husky/pre-push'), 'echo "npx aquila-ai gate pre-push"\n');
     const result = aquila(root, 'check', '--ready');
