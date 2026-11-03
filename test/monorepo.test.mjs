@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
+  chmodSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -78,8 +79,10 @@ function reactSibling(top) {
       '',
     ].join('\n'),
   );
-  for (const phase of ['pre-commit', 'pre-push'])
+  for (const phase of ['pre-commit', 'pre-push']) {
     write(top, `.aquila-hooks/${phase}`, read(PKG, `githooks/${phase}`));
+    chmodSync(join(top, `.aquila-hooks/${phase}`), 0o755); // git ignores non-executable hooks on Linux/macOS
+  }
   write(top, '.aquila-hooks/projects', '# <package> <dir>\naquila-react-ai frontend\n');
   git(top, 'config', 'core.hooksPath', '.aquila-hooks');
 }
