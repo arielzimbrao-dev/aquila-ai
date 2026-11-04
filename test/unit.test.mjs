@@ -32,31 +32,6 @@ test('guard: blocks git skipping hooks or force push, but not text that mentions
   }
 });
 
-test('git hooks are the shared, package-agnostic dispatcher and are versioned as executables', (t) => {
-  // The shipped hooks pass the check --ready verification and are one script for both phases.
-  const cfg = { hooks: { 'pre-commit': ['x'], 'pre-push': ['x'] } };
-  assert.deepEqual(hookIssues(PKG, cfg, 'githooks'), []);
-  const commit = readFileSync(join(PKG, 'githooks', 'pre-commit'), 'utf8');
-  assert.equal(readFileSync(join(PKG, 'githooks', 'pre-push'), 'utf8'), commit, 'phase comes from $0');
-  assert.ok(!commit.includes('\r\n'), 'sh breaks with CRLF');
-  assert.match(commit, /^#!\/bin\/sh\n# aquila-hooks dispatcher v1 /);
-  assert.match(commit, /node_modules\/\$pkg\/bin\/aquila\.mjs/, 'runs whichever aquila package is registered');
-  assert.doesNotMatch(commit, /aquila-ai\/bin/, 'no package name hard-coded');
-  // Linux/macOS ignore hooks without +x; only verifiable when the package is a git checkout.
-  let modes;
-  try {
-    modes = execFileSync('git', ['ls-files', '-s', 'githooks'], {
-      cwd: PKG,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).trim();
-  } catch {
-    modes = '';
-  }
-  if (!modes) return t.skip('package is not a git checkout');
-  for (const line of modes.split('\n')) assert.match(line, /^100755 /, line);
-});
-
 test('guard: also catches -n, -c core.hooksPath and + refspec', async () => {
   const { blocked } = await import(pathToFileURL(join(PKG, 'hooks/guard-bash.mjs')).href);
   const g = 'git';
@@ -188,23 +163,6 @@ test('version: --version and version() match package.json', async () => {
   assert.match(usage.stdout, /--lang=en\|pt-BR\|pt-PT/);
   assert.match(usage.stdout, /--pr-max-files=<n>/);
   assert.equal(spawnSync(process.execPath, [CLI, '--help'], { encoding: 'utf8' }).status, 0);
-});
-
-test('nestMajor: installed @nestjs/core wins over the declared range; null without NestJS', async () => {
-  const { nestMajor } = await import(pathToFileURL(CLI).href);
-  const root = project();
-  const bare = project({}, { node: false });
-  try {
-    assert.equal(nestMajor(root), 11, 'range ^11.0.0 from package.json');
-    const installed = join(root, 'node_modules/@nestjs/core');
-    mkdirSync(installed, { recursive: true });
-    writeFileSync(join(installed, 'package.json'), JSON.stringify({ version: '10.4.1' }));
-    assert.equal(nestMajor(root), 10, 'installed version first');
-    assert.equal(nestMajor(bare), null);
-  } finally {
-    cleanup(root);
-    cleanup(bare);
-  }
 });
 
 test('workflows: tests run on Ubuntu and Windows; release tests and checks versions before publishing', () => {

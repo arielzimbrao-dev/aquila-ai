@@ -1,15 +1,29 @@
 {
   "name": "aquila-ai",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "AI-assisted development method for NestJS: plan → tests → implement → review, quality gates, docs and adapters for Claude Code, GitHub Copilot and Codex.",
-  "keywords": ["nestjs", "ai", "claude-code", "copilot", "codex", "agents", "tdd", "cli"],
+  "keywords": [
+    "nestjs",
+    "ai",
+    "claude-code",
+    "copilot",
+    "codex",
+    "agents",
+    "tdd",
+    "cli"
+  ],
   "license": "MIT",
   "author": "Aquila Zimbrao",
-  "repository": { "type": "git", "url": "git+https://github.com/arielzimbrao-dev/aquila-ai.git" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arielzimbrao-dev/aquila-ai.git"
+  },
   "homepage": "https://github.com/arielzimbrao-dev/aquila-ai#readme",
   "bugs": "https://github.com/arielzimbrao-dev/aquila-ai/issues",
   "type": "module",
-  "bin": { "aquila-ai": "bin/aquila.mjs" },
+  "bin": {
+    "aquila-ai": "bin/aquila.mjs"
+  },
   "files": [
     "bin/",
     "core/",
@@ -27,9 +41,37 @@
     "CHANGELOG.md",
     "assets/"
   ],
-  "engines": { "node": ">=22" },
-  "peerDependencies": { "@nestjs/core": ">=8" },
-  "peerDependenciesMeta": { "@nestjs/core": { "optional": true } },
+  "engines": {
+    "node": ">=22"
+  },
+  "peerDependencies": {
+    "@nestjs/core": ">=8",
+    "eslint": "^9.24.0 || ^10.0.0",
+    "typescript-eslint": "^8.20.0",
+    "eslint-plugin-sonarjs": "^3.0.0 || ^4.0.0",
+    "eslint-plugin-jest": "^28.10.0 || ^29.0.0",
+    "eslint-plugin-unicorn": ">=65.0.1"
+  },
+  "peerDependenciesMeta": {
+    "@nestjs/core": {
+      "optional": true
+    },
+    "eslint": {
+      "optional": true
+    },
+    "typescript-eslint": {
+      "optional": true
+    },
+    "eslint-plugin-sonarjs": {
+      "optional": true
+    },
+    "eslint-plugin-jest": {
+      "optional": true
+    },
+    "eslint-plugin-unicorn": {
+      "optional": true
+    }
+  },
   "scripts": {
     "test": "node --test test/*.test.mjs"
   }

@@ -4,27 +4,51 @@
     "file": "package.json",
     "contains": "@nestjs/core"
   },
-  "srcDirs": ["src"],
-  "testDirs": ["test"],
+  "srcDirs": [
+    "src"
+  ],
+  "testDirs": [
+    "test"
+  ],
   "lintEngine": "eslint",
   "gates": {
     "typecheck": {
-      "npmScripts": ["typecheck", "type-check"]
+      "npmScripts": [
+        "typecheck",
+        "type-check"
+      ]
     },
     "test": {
-      "npmScripts": ["test"]
+      "npmScripts": [
+        "test:ci",
+        "test"
+      ]
     },
     "lint": {
-      "npmScripts": ["lint:ci", "lint"]
+      "npmScripts": [
+        "lint:check",
+        "lint:ci",
+        "lint"
+      ]
     },
     "format": {
-      "npmScripts": ["format:check", "prettier:check"]
+      "npmScripts": [
+        "format:check",
+        "prettier:check",
+        "format"
+      ]
     },
     "coverage": {
-      "npmScripts": ["test:cov", "coverage"]
+      "npmScripts": [
+        "test:cov",
+        "coverage"
+      ]
     },
     "e2e": {
-      "npmScripts": ["test:e2e", "e2e"],
+      "npmScripts": [
+        "test:e2e",
+        "e2e"
+      ],
       "when": [
         "src/**",
         "test/**",
@@ -38,9 +62,22 @@
     }
   },
   "hooks": {
-    "pre-commit": ["format", "lint"],
-    "pre-push": ["typecheck", "test"],
-    "ci": ["typecheck", "lint", "format", "test", "coverage", "e2e"]
+    "pre-commit": [
+      "format",
+      "lint"
+    ],
+    "pre-push": [
+      "typecheck",
+      "test"
+    ],
+    "ci": [
+      "typecheck",
+      "lint",
+      "format",
+      "test",
+      "coverage",
+      "e2e"
+    ]
   },
   "coverage": {
     "statements": 98,
@@ -52,13 +89,43 @@
     "node-version": "22"
   },
   "coverageEnforcedIf": [
-    ["jest.config.js", "coverageThreshold"],
-    ["jest.config.ts", "coverageThreshold"],
-    ["jest.config.cjs", "coverageThreshold"],
-    ["jest.config.mjs", "coverageThreshold"],
-    ["package.json", "coverageThreshold"],
-    ["vitest.config.ts", "thresholds"],
-    ["vitest.config.js", "thresholds"],
-    ["vite.config.ts", "thresholds"]
+    [
+      "jest.config.js",
+      "coverageThreshold"
+    ],
+    [
+      "jest.config.ts",
+      "coverageThreshold"
+    ],
+    [
+      "jest.config.cjs",
+      "coverageThreshold"
+    ],
+    [
+      "jest.config.mjs",
+      "coverageThreshold"
+    ],
+    [
+      "package.json",
+      "coverageThreshold"
+    ],
+    [
+      "vitest.config.ts",
+      "thresholds"
+    ],
+    [
+      "vitest.config.js",
+      "thresholds"
+    ],
+    [
+      "vite.config.ts",
+      "thresholds"
+    ]
+  ],
+  "configPaths": [
+    "**/config/**",
+    "src/main.*",
+    "**/*.main.*",
+    "**/*.datasource.*"
   ]
 }

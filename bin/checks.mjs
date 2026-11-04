@@ -2,7 +2,10 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { globToRegex } from './glob.mjs';
 import { missingTool } from './lint.mjs';
+import { PROFILE } from './profile.mjs';
 import { isDispatcher } from './repo.mjs';
+
+const NAME = PROFILE.pkg;
 
 const DOC_DIRS = ['ai', 'c4', 'adr', 'tracks', 'reference', 'runbooks'];
 export const TEMPLATE_MARKS = {
@@ -24,7 +27,7 @@ export function docWarnings(root) {
   return [
     ...(missing.length
       ? [
-          `! docs/ missing ${missing.join(', ')} (.aquila/core/docs.md) → npx aquila-ai init`,
+          `! docs/ missing ${missing.join(', ')} (.aquila/core/docs.md) → npx ${NAME} init`,
         ]
       : []),
     ...unfilled.map((file) => `! ${file} is still the template → /aquila-docs`),
@@ -61,7 +64,8 @@ export function inspectDocuments({ root, cfg, walk, routers, instructions, budge
   for (const [glob, max] of Object.entries({ ...budgets, ...cfg.budgets })) {
     const re = globToRegex(glob);
     for (const file of candidates.filter((candidate) => re.test(candidate))) {
-      const size = read(root, file).length;
+      // CRLF (autocrlf) is not content.
+      const size = read(root, file).replaceAll('\r\n', '\n').length;
       if (size > max) over.push(`${file}: ${size} > ${max}`);
     }
   }
@@ -122,18 +126,22 @@ export function hookIssues(root, cfg, hooksPath) {
       .join('\n')
       .trim();
     // Only a direct delegation proves the exit code propagates, without interpreting/running shell.
-    const path = String.raw`(?:\.\/)?node_modules/aquila-ai/bin/aquila\.mjs`;
-    const script = String.raw`(?:${path}|"${path}"|'${path}'|"\$\(git rev-parse --show-toplevel\)/node_modules/aquila-ai/bin/aquila\.mjs")`;
+    const path = String.raw`(?:\.\/)?node_modules/${NAME}/bin/aquila\.mjs`;
+    const script = String.raw`(?:${path}|"${path}"|'${path}'|"\$\(git rev-parse --show-toplevel\)/node_modules/${NAME}/bin/aquila\.mjs")`;
+    // Optional `cd <project> &&` (a project in a subfolder, or the 0.1.0 `cd "$(dirname "$0")/../.."`).
+    const cd = String.raw`(?:cd[ \t]+(?:"[^"\n]+"|'[^'\n]+'|[^\s;&|]+)[ \t]+&&[ \t]+)?`;
     const call = new RegExp(
-      `^(?:exec[ \\t]+)?(?:node[ \\t]+${script}|npx(?:[ \\t]+--no(?:-install)?)?[ \\t]+aquila-ai)[ \\t]+gate[ \\t]+${phase}$`,
+      `^${cd}(?:exec[ \\t]+)?(?:node[ \\t]+${script}|npx(?:[ \\t]+--no(?:-install)?)?[ \\t]+${NAME})[ \\t]+gate[ \\t]+${phase}$`,
     );
-    // husky & co. delegating to the dispatcher: `.aquila-hooks/<phase> "$@"` (optionally via exec/sh).
+    // husky & co. delegating to the dispatcher: `.aquila-hooks/<phase> "$@"` (optionally via exec/sh, or
+    // from the repository root: "$(git rev-parse --show-toplevel)/.aquila-hooks/<phase>").
+    const top = String.raw`"\$\(git rev-parse --show-toplevel\)/\.aquila-hooks/${phase}"`;
     const dispatch = new RegExp(
-      `^(?:exec[ \\t]+)?(?:sh[ \\t]+)?(?:\\./)?\\.aquila-hooks/${phase}(?:[ \\t]+"\\$@")?$`,
+      `^(?:exec[ \\t]+)?(?:sh[ \\t]+)?(?:(?:\\./)?\\.aquila-hooks/${phase}|${top})(?:[ \\t]+"\\$@")?$`,
     );
     if (!shell || !(call.test(text) || dispatch.test(text)))
       issues.push(
-        `${dir}/${phase} does not call \`npx aquila-ai gate ${phase}\` in a directly verifiable way — integration unverified (review complex hooks manually)`,
+        `${dir}/${phase} does not call \`npx ${NAME} gate ${phase}\` in a directly verifiable way — integration unverified (review complex hooks manually)`,
       );
   }
   return issues;

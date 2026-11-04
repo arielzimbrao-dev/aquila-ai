@@ -454,7 +454,7 @@ test('doctor: gate in no phase and husky hooks that do not call aquila-ai gate',
     git(root, 'config', 'core.hooksPath', '.husky/_');
     const { out } = aquila(root, 'doctor');
     assert.match(out, /! gate lint-aquila in no phase/);
-    assert.match(out, /! \.husky\/pre-push does not call `npx aquila-ai gate pre-push`/);
+    assert.match(out, /! \.husky\/pre-push does not call the aquila dispatcher/);
     assert.match(out, /! \.husky\/pre-commit does not call/, 'lint-staged outside hooks.pre-commit');
     assert.match(out, /✗ aquila-ai not in package\.json → npm i -D aquila-ai/);
 
