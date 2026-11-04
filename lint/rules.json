@@ -367,7 +367,8 @@
             "rule": "unicorn/prefer-string-replace-all"
           },
           {
-            "rule": "unicorn/prefer-at"
+            "rule": "unicorn/prefer-at",
+            "fix": false
           },
           {
             "rule": "unicorn/prefer-array-some"
@@ -454,6 +455,7 @@
         "eslint": [
           {
             "preset": "sonarjs/recommended",
+            "skipWhenMatches": { "sonarjs/assertions-in-tests": "[.]expect[(]" },
             "off": [
               "sonarjs/no-unused-vars",
               "sonarjs/todo-tag",

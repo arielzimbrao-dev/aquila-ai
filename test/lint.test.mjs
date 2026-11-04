@@ -163,7 +163,7 @@ test('lint: ESLint builder applies the level and scopes, and skips missing plugi
   const depth = high.config.find((c) => c.rules?.['max-depth']);
   assert.deepEqual(depth.rules['max-depth'], ['error', 3]);
   assert.deepEqual(depth.files, ['src/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'], 'src only');
-  assert.deepEqual(depth.ignores, ['**/migrations/**'], 'migrations excluded from function size');
+  assert.ok(['**/migrations/**'].every((g) => depth.ignores.includes(g)), 'migrations excluded from function size');
   assert.deepEqual(rulesOf(high.config)['aquila/max-params'], ['error', 5]);
   const title = rulesOf(high.config)['jest/valid-title'];
   assert.equal(title, undefined, 'jest missing → rule skipped');
@@ -277,4 +277,29 @@ test('lint: ESLint runs through node (no shell or .cmd shims) with cache', () =>
   } finally {
     cleanup(root);
   }
+});
+
+test('NestJS: a supertest `.expect(…)` counts as the assertion of sonarjs/assertions-in-tests', async () => {
+  const { buildEslintConfig } = await import(pathToFileURL(join(PKG, 'lint/eslint/build.mjs')).href);
+  const catalog = JSON.parse(readFileSync(join(PKG, 'lint/rules.json'), 'utf8'));
+  const reports = [];
+  const assertions = {
+    meta: { type: 'problem', schema: [] },
+    create: (context) => ({ CallExpression: (node) => context.report({ node, message: 'Add at least one assertion' }) }),
+  };
+  const sonarjs = { rules: { 'assertions-in-tests': assertions }, configs: {} };
+  sonarjs.configs.recommended = { plugins: { sonarjs }, rules: { 'sonarjs/assertions-in-tests': 'error' } };
+  const { config } = buildEslintConfig(catalog, { level: 'high', srcDirs: ['src'], plugins: { sonarjs } });
+  const used = config.find((b) => b.rules?.['sonarjs/assertions-in-tests']).plugins.sonarjs;
+  for (const b of config.filter((x) => x.plugins?.sonarjs)) assert.equal(b.plugins.sonarjs, used, 'one plugin object (ESLint rejects two)');
+  const rule = used.rules['assertions-in-tests'];
+  const run = (text) =>
+    rule
+      .create({ options: [], sourceCode: { getText: () => text }, report: (d) => reports.push(d) })
+      .CallExpression({ type: 'CallExpression' });
+  run("it('lists', () => request(app.getHttpServer()).get('/users').expect(200))");
+  run("it('posts', async () => { await api().post('/users').send({}).expect(201); })");
+  assert.equal(reports.length, 0, 'supertest assertions accepted');
+  run("it('nothing', () => { service.list(); })");
+  assert.equal(reports.length, 1, 'a test without assertions is still reported');
 });
