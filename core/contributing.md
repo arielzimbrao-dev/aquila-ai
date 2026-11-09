@@ -21,6 +21,8 @@ source of truth and use this map before changing code.
 | Monorepo, shared hook dispatcher (protocol shared with aquila-react-ai/aquila-next-ai: keep `bin/repo.mjs` and `githooks/` byte-identical) | `bin/repo.mjs`, `githooks/` | `test/monorepo.test.mjs` |
 | Gate execution and filtering | `bin/aquila.mjs` (`gate`, generated `.github/workflows/aquila-gates.yml`) | `test/check-gate.test.mjs` |
 | Rules for a task or checklist | `core/` | contract test if there is CLI behavior |
+| Model per role/skill, `disable-model-invocation` | `adapters/models.json`, `core/models.md`, agent/skill frontmatter | `test/models.test.mjs` |
+| When a skill fires (or must not) | `skills/*/SKILL.md` description, `evals/` | `claude plugin eval` (Claude Code ≥ 2.1.269; costs tokens) |
 
 `bin/aquila.mjs` holds the CLI composition and lifecycle; validation, lint and stack detection/initial
 configuration live in the modules `bin/config-validation.mjs`, `bin/lint.mjs` and `bin/stack.mjs`.
@@ -38,7 +40,9 @@ orchestration in the entrypoint.
    the real CLI through `test/helpers.mjs`.
 2. Run the touched test file with `node --test test/<file>.test.mjs`.
 3. Before finishing, run `node --test test/*.test.mjs`, plus `node --test test/plugin.test.mjs` if the
-   change touches plugin metadata or integration.
+   change touches plugin metadata or integration (CI also runs `claude plugin validate . --strict`). Changed
+   a skill or agent → add or adjust its case in `evals/` and run `claude plugin eval . --case <case> --runs 1`
+   (costs tokens; `evals/` is not published to npm).
 4. Update the README, `core/` and `CHANGELOG.md` when the adoption experience or the contract consumed by
    projects changes. A breaking change requires a major version and a migration note.
 
